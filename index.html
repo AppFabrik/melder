@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangelmelder Heimburg</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E31D2A">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        :root {
+            --hb-red: #E31D2A;
+            --hb-yellow: #FFD700;
+            --hb-bg: #FDFDFD;
+            --text: #2D3436;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center;
+            background-image: linear-gradient(rgba(240, 242, 245, 0.88), rgba(240, 242, 245, 0.88)), url("background.png");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        .container {
+            width: 100%; max-width: 550px;
+            background: transparent; min-height: 100vh;
+            box-shadow: none;
+        }
+        header {
+            background: linear-gradient(135deg, var(--hb-red) 0%, #b3121b 100%);
+            color: white; padding: 30px 20px; text-align: center;
+            border-bottom: 6px solid var(--hb-yellow);
+            border-radius: 0 0 25px 25px;
+        }
+        header img { width: 80px; background: white; padding: 8px; border-radius: 50%; margin-bottom: 10px; }
+        form { padding: 20px; }
+        .section-title {
+            color: var(--hb-red); font-weight: bold; font-size: 1.1rem;
+            border-bottom: 2px solid #F0F0F0; margin: 25px 0 15px 0; padding-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        .form-group { margin-bottom: 15px; }
+        label { 
+            display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; 
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        input, textarea, select {
+            width: 100%; padding: 12px; border: 2px solid #EEE;
+            border-radius: 10px; font-size: 1rem; box-sizing: border-box;
+            background-color: #FAFAFA;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--hb-red); outline: none; background: white; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        .hidden { display: none; }
+        .photo-box {
+            background-color: #FFFDE7; padding: 15px; border-radius: 15px;
+            border: 2px dashed var(--hb-yellow); margin: 20px 0;
+        }
+        .btn-submit {
+            width: 100%; background: var(--hb-red); color: white;
+            padding: 18px; border: none; border-radius: 12px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 20px; text-align: center; border: 4px solid var(--hb-yellow);
+        }
+        .btn-go { background: var(--hb-red); color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <img src="icon-192.png" alt="Wappen Heimburg" onerror="this.style.display='none'">
+        <h2>Mangelmelder Heimburg</h2>
+    </header>
+
+    <form id="maengelForm">
+        <div class="section-title">Wer meldet den Mangel?</div>
+        <div class="form-group">
+            <label>Name, Vorname *</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label>E-Mail *</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label>Telefon</label>
+                <input type="tel" id="telefon" name="telefon">
+            </div>
+        </div>
+
+        <div class="section-title">Was und Wo?</div>
+        <div class="form-group">
+            <label>Art des Mangels *</label>
+            <select id="kategorie" name="kategorie" required>
+                <option value="">Bitte wählen...</option>
+                <option>Grünanlagen</option>
+                <option>Straßenbeleuchtung</option>
+                <option>Straßenschäden / Schlagloch</option>
+                <option>Gehwegschäden</option>
+                <option>Wilder Müll / Deponie</option>
+                <option>Spielplatz / Grünanlagen</option>
+                <option>Schilder / Markierung</option>
+                <option>Vandalismus</option>
+                <option>Sonstiges</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Straße und ggf. Hausnummer des Mangels</label>
+            <input type="text" id="strasse" name="strasse">
+        </div>
+        
+        <div class="form-group">
+            <label>Ecke Straße</label>
+            <input type="text" id="ecke" name="ecke" placeholder="z.B. Hauptstraße / Kreuzweg">
+        </div>
+
+        <div class="form-group">
+            <label>Beschreibung / Bemerkung</label>
+            <textarea id="beschreibung" name="beschreibung" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Bereits an anderer Stelle gemeldet?</label>
+            <select id="gemeldet" name="gemeldet" onchange="toggleGemeldet()">
+                <option value="Nein">Nein</option>
+                <option value="Ja">Ja</option>
+            </select>
+        </div>
+
+        <div id="gemeldetDetails" class="hidden">
+            <div class="row">
+                <div class="form-group">
+                    <label>Wann? (Datum)</label>
+                    <input type="date" id="gemeldetWann" name="gemeldetWann">
+                </div>
+                <div class="form-group">
+                    <label>Wem gemeldet?</label>
+                    <input type="text" id="gemeldetWem" name="gemeldetWem" placeholder="z.B. Bauhof, Polizei">
+                </div>
+            </div>
+        </div>
+
+        <div class="photo-box">
+            <label style="color: var(--hb-red); font-weight: bold; text-shadow: none;">📷 Fotos (max. 5)</label>
+            <p style="font-size: 0.75rem; margin-bottom: 10px;">Bilder werden automatisch mitgesendet.</p>
+            <input type="file" name="foto1" accept="image/*" capture="environment" style="margin-bottom:5px">
+            <input type="file" name="foto2" accept="image/*" capture="environment" style="margin-bottom:5px">
+            <input type="file" name="foto3" accept="image/*" capture="environment" style="margin-bottom:5px">
+            <input type="file" name="foto4" accept="image/*" capture="environment" style="margin-bottom:5px">
+            <input type="file" name="foto5" accept="image/*" capture="environment">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">Mangel jetzt melden</button>
+    </form>
+</div>
+
+<div id="infoModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color: var(--hb-red);">Erfolgreich gesendet!</h3>
+        <p>Vielen Dank für deine Meldung.</p>
+        <p>Wir haben die Daten an das Ortsbüro übermittelt. Du erhältst in Kürze eine <strong>Bestätigungs-E-Mail</strong> als Nachweis.</p>
+        <button id="modalGo" class="btn-go">Schließen</button>
+    </div>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+
+    function toggleGemeldet() {
+        const val = document.getElementById('gemeldet').value;
+        document.getElementById('gemeldetDetails').className = (val === 'Ja') ? '' : 'hidden';
+    }
+
+    const form = document.getElementById('maengelForm');
+    const modal = document.getElementById('infoModal');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Hier ist deine echte Make-Webhook-URL eingesetzt
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/0m58al2ycyl7ohr75w8lgvc7a6f3wzx8";
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Button-Status ändern (Feedback für den Nutzer)
+        submitBtn.textContent = "Wird gesendet... Bitte warten";
+        submitBtn.disabled = true;
+
+        // Formulardaten (inkl. Bilder) zusammenpacken
+        const formData = new FormData(form);
+
+        try {
+            // Daten an Make senden
+            const response = await fetch(MAKE_WEBHOOK_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // Erfolgsfenster anzeigen
+                modal.style.display = 'flex';
+                form.reset(); // Formular leeren
+                submitBtn.textContent = "Mangel jetzt melden";
+                submitBtn.disabled = false;
+            } else {
+                alert("Es gab ein Problem beim Senden. Bitte versuche es später noch einmal.");
+                submitBtn.textContent = "Mangel jetzt melden";
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Fehler:", error);
+            alert("Netzwerkfehler. Bitte überprüfe deine Internetverbindung.");
+            submitBtn.textContent = "Mangel jetzt melden";
+            submitBtn.disabled = false;
+        }
+    });
+
+    document.getElementById('modalGo').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+</script>
+</body>
+</html>
