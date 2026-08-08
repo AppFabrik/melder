@@ -157,7 +157,7 @@
 
         <div class="photo-box">
             <label style="color: var(--hb-red); font-weight: bold; text-shadow: none;">📷 Fotos (max. 5)</label>
-            <p style="font-size: 0.75rem; margin-bottom: 10px;">Bilder werden automatisch mitgesendet.</p>
+            <p style="font-size: 0.75rem; margin-bottom: 10px;">Bilder werden automatisch komprimiert und mitgesendet.</p>
             <input type="file" name="foto1" accept="image/*" capture="environment" style="margin-bottom:5px">
             <input type="file" name="foto2" accept="image/*" capture="environment" style="margin-bottom:5px">
             <input type="file" name="foto3" accept="image/*" capture="environment" style="margin-bottom:5px">
@@ -186,34 +186,98 @@
         document.getElementById('gemeldetDetails').className = (val === 'Ja') ? '' : 'hidden';
     }
 
+    // Hilfsfunktion: Bild automatisch verkleinern & komprimieren
+    function compressImage(file, maxWidth = 1200, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            reject(new Error('Canvas to Blob failed'));
+                            return;
+                        }
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    }
+
     const form = document.getElementById('maengelForm');
     const modal = document.getElementById('infoModal');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Hier ist deine echte Make-Webhook-URL eingesetzt
     const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/0m58al2ycyl7ohr75w8lgvc7a6f3wzx8";
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Button-Status ändern (Feedback für den Nutzer)
-        submitBtn.textContent = "Wird gesendet... Bitte warten";
+        submitBtn.textContent = "Bilder werden optimiert & gesendet...";
         submitBtn.disabled = true;
 
-        // Formulardaten (inkl. Bilder) zusammenpacken
-        const formData = new FormData(form);
+        // Formulardaten manuell zusammenbauen
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('telefon', document.getElementById('telefon').value);
+        formData.append('kategorie', document.getElementById('kategorie').value);
+        formData.append('strasse', document.getElementById('strasse').value);
+        formData.append('ecke', document.getElementById('ecke').value);
+        formData.append('beschreibung', document.getElementById('beschreibung').value);
+        formData.append('gemeldet', document.getElementById('gemeldet').value);
+        formData.append('gemeldetWann', document.getElementById('gemeldetWann').value);
+        formData.append('gemeldetWem', document.getElementById('gemeldetWem').value);
+
+        // Alle Foto-Inputs durchgehen und ggf. komprimieren
+        for (let i = 1; i <= 5; i++) {
+            const fileInput = document.querySelector(`input[name="foto${i}"]`);
+            if (fileInput && fileInput.files[0]) {
+                const originalFile = fileInput.files[0];
+                try {
+                    // Bild auf max. 1200px runterrechnen und Komprimierung auf 70% setzen
+                    const compressedFile = await compressImage(originalFile, 1200, 0.7);
+                    formData.append(`foto${i}`, compressedFile);
+                } catch (err) {
+                    console.error("Fehler beim Komprimieren von Bild " + i, err);
+                    formData.append(`foto${i}`, originalFile); // Fallback falls was schiefgeht
+                }
+            }
+        }
 
         try {
-            // Daten an Make senden
             const response = await fetch(MAKE_WEBHOOK_URL, {
                 method: 'POST',
                 body: formData
             });
 
             if (response.ok) {
-                // Erfolgsfenster anzeigen
                 modal.style.display = 'flex';
-                form.reset(); // Formular leeren
+                form.reset();
                 submitBtn.textContent = "Mangel jetzt melden";
                 submitBtn.disabled = false;
             } else {
