@@ -265,16 +265,19 @@
         formData.append('gemeldetWann', document.getElementById('gemeldetWann').value);
         formData.append('gemeldetWem', document.getElementById('gemeldetWem').value);
 
+        // Alle Foto-Inputs durchgehen und als EINE Liste "fotos" anhängen
         for (let i = 1; i <= 5; i++) {
             const fileInput = document.querySelector(`input[name="foto${i}"]`);
             if (fileInput && fileInput.files[0]) {
                 const originalFile = fileInput.files[0];
                 try {
                     const compressedFile = await compressImage(originalFile, 1200, 0.7);
-                    formData.append(`foto${i}`, compressedFile);
+                    // Hier ist die Änderung: Anhang erfolgt als "fotos"
+                    formData.append('fotos', compressedFile, originalFile.name);
                 } catch (err) {
                     console.error("Fehler beim Komprimieren von Bild " + i, err);
-                    formData.append(`foto${i}`, originalFile);
+                    // Auch im Fehlerfall als "fotos" anhängen
+                    formData.append('fotos', originalFile, originalFile.name);
                 }
             }
         }
